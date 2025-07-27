@@ -1,36 +1,67 @@
-import {useState} from 'react'
-import Spinner from './Spinner';
-import useGif from '../hooks/useGif';
-  
-  const Tag = () => {
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { FiDownload } from 'react-icons/fi';
 
-    const [tag,setTag] = useState("Doggy");
+const API_KEY = process.env.REACT_APP_GIPHY_API_KEY;
 
-    const {gif,loading,fetchData} = useGif(tag);
-  
-    return (
-      <div className='w-1/2  bg-blue-500 rounded-lg border border-black flex flex-col items-center gap-y-10 mr-[15px]'>
-  
-        <h1 className='mt-[15px] text-2xl underline font-bold uppercase'> Random {tag} gif</h1>
-  
-        {
-          loading ?(<Spinner/>) :(<img src={gif} width="450" alt='No'/>)
-        }
-        
-        <input
-        className='w-10/12 text-lg py-2 rounded-lg mb-[3px] text-center'
-        onChange={((event)=>setTag(event.target.value))}
-        value={tag}
-        />
-  
+const Tag = () => {
+  const [gif, setGif] = useState('');
+  const [tag, setTag] = useState('funny');
 
-        <button
-        className='w-10/12 bg-white opacity-70 text-lg py-2 rounded-lg mb-[20px]' 
-        onClick={(()=>fetchData(tag))}>
-          Generate GIF
-         </button>
-      </div>
-    )
+  async function fetchData() {
+    const url = `https://api.giphy.com/v1/gifs/random?api_key=${API_KEY}&tag=${tag}`;
+    const { data } = await axios.get(url);
+    const imageSource = data.data.images.downsized_large.url;
+    setGif(imageSource);
   }
-  
-  export default Tag
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  return (
+    <div className="w-full max-w-[500px] min-h-[500px] bg-[#1e1e2f] rounded-2xl p-4 border border-[#2e2e3e] shadow-xl flex flex-col items-center gap-4 text-gray-100 transition-all duration-300">
+      <h1 className="text-3xl font-bold underline text-pink-300 tracking-wide">
+        Search GIF
+      </h1>
+
+      <img
+        src={gif}
+        alt={tag}
+        className="w-full h-[300px] object-cover rounded-md"
+      />
+
+      <input
+        type="text"
+        value={tag}
+        onChange={(e) => setTag(e.target.value)}
+        placeholder="Enter tag (e.g. cat, dance)"
+        className="w-full p-2 rounded-md text-black focus:outline-none"
+      />
+
+      <div className="flex gap-4 mt-auto">
+        <button
+          onClick={fetchData}
+          className="bg-pink-500 hover:bg-pink-600 text-white font-semibold py-2 px-6 rounded-xl transition-all duration-200"
+        >
+          Generate GIF
+        </button>
+
+        {gif && (
+          <a
+            href={gif}
+            download="tagged.gif"
+            className="bg-emerald-500 hover:bg-emerald-600 p-2 rounded-xl transition-all duration-200 flex items-center justify-center"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Download GIF"
+          >
+            <FiDownload size={22} />
+          </a>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Tag;
